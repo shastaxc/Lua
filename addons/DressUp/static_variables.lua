@@ -96,3 +96,5 @@ _faces["Mannequin"] = 30
 -- PC Update Masks associated with model changes
 
 model_mask = L{16,17,20,21}
+
+gaol_zones = {279, 298}

@@ -60,6 +60,8 @@ local initialize = function()
     info.self.id = player.id
     info.self.index = player.index
 
+    update_gaol_vars(windower.ffxi.get_info().zone)
+
     if not settings[info.self.name] then
         settings[info.self.name] = {}
     end
@@ -85,15 +87,15 @@ windower.register_event('logout', function()
 end)
 
 windower.register_event('job change',function(job)
-    local isProfileLoaded = load_profile(res.jobs[job].name)
-    if (not settings.blinking['self']['always'] and not settings.blinking['all']['always']) or isProfileLoaded then
+    if load_profile(res.jobs[job].name) then
         update_model(info.self.index)
-    end
-    if isProfileLoaded then
         notice('Loaded profile: ' .. res.jobs[job].name)
     end
 end)
 
+windower.register_event('zone_change', function(new)
+    update_gaol_vars(new)
+end)
 
 local modify_gear = function(packet, name, freeze, models)
     local modified = false
@@ -120,7 +122,25 @@ local modify_gear = function(packet, name, freeze, models)
 end
 
 windower.register_event('incoming chunk',function (id, _, data)
-    
+    if pilgrim_moogle_index and (id == 0x00E or id == 0x05B) then
+        if id ~= 0x05B and pilgrim_moogle_pos then return end
+        if not pilgrim_moogle_pos and id == 0x00E then
+            local packet = packets.parse('incoming', data)
+            if packet.Index == pilgrim_moogle_index and (packet.X ~= 0 or packet.Y ~= 0) then -- hacky way of determining if should update till I do it the "right way" some other time after updating packets library
+                pilgrim_moogle_pos = {X=packet.X, Y=packet.Y}
+                in_sheol_gaol_lobby = true
+            end
+        elseif pilgrim_moogle_pos and id == 0x05B then -- moogle position known and just got "teleported"
+            local packet = packets.parse('incoming', data)
+            if packet.Index == info.self.index then
+                in_sheol_gaol_lobby =
+                    packet.X > pilgrim_moogle_pos.X - 25 and packet.X < pilgrim_moogle_pos.X + 25 and
+                    packet.Y > pilgrim_moogle_pos.Y - 25 and packet.Y < pilgrim_moogle_pos.Y + 25
+            end
+        end
+        return
+    end
+
     if id ~= 0x00A and id ~= 0x00D and id ~= 0x051 then
         return
     end

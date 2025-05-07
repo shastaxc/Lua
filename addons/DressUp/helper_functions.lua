@@ -129,3 +129,13 @@ function formatting(k, v)
     end
   return k:gsub("^%l", string.upper) ..': ['..v..']' 
 end
+
+function update_gaol_vars(zone)
+    if table.contains(gaol_zones, zone) then
+        pilgrim_moogle_index = next(windower.ffxi.get_mob_list('Pilgrim Moogle'))
+    else
+        pilgrim_moogle_index = nil
+        pilgrim_moogle_pos = nil
+        in_sheol_gaol_lobby = nil
+    end
+end
